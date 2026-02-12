@@ -2,152 +2,183 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Redmi 13C Simulator</title>
+<title>HyperOS 3.0 Simulator</title>
 <style>
 body{
   margin:0;
-  font-family:sans-serif;
-  background:#111;
+  background:#0f0f0f;
+  font-family:system-ui;
   display:flex;
   justify-content:center;
   align-items:center;
   height:100vh;
 }
 .phone{
-  width:300px;
-  height:600px;
-  background:#000;
-  border-radius:30px;
+  width:320px;
+  height:640px;
+  background:linear-gradient(180deg,#1e1e1e,#000);
+  border-radius:35px;
   overflow:hidden;
   position:relative;
-  box-shadow:0 0 30px #000;
+  color:white;
+  box-shadow:0 0 40px #000;
+  transition:0.3s;
 }
 .status{
-  color:white;
-  padding:10px;
-  font-size:14px;
   display:flex;
   justify-content:space-between;
+  padding:8px 15px;
+  font-size:14px;
 }
 .lock{
-  color:white;
-  text-align:center;
-  margin-top:200px;
-  font-size:20px;
-  cursor:pointer;
+  position:absolute;
+  width:100%;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  background:linear-gradient(180deg,#101010,#000);
+  transition:0.4s;
+}
+.lock h1{
+  font-size:40px;
+  margin:0;
+}
+.unlock-text{
+  margin-top:10px;
+  font-size:14px;
+  opacity:0.6;
 }
 .home{
-  display:none;
-  color:white;
+  position:absolute;
+  width:100%;
+  height:100%;
   padding:20px;
+  display:none;
 }
-.apps{
+.grid{
   display:grid;
-  grid-template-columns:repeat(3,1fr);
+  grid-template-columns:repeat(4,1fr);
   gap:20px;
-  margin-top:20px;
+  margin-top:40px;
 }
 .app{
   text-align:center;
+  font-size:12px;
   cursor:pointer;
 }
 .icon{
-  width:50px;
-  height:50px;
-  border-radius:15px;
-  background:#444;
+  width:55px;
+  height:55px;
+  border-radius:18px;
+  background:linear-gradient(135deg,#444,#222);
   margin:auto;
+  margin-bottom:5px;
+  transition:0.2s;
 }
-.settings{
-  display:none;
+.icon:active{
+  transform:scale(0.9);
+}
+.control{
+  position:absolute;
+  top:-100%;
+  width:100%;
+  height:50%;
+  background:rgba(20,20,20,0.95);
+  backdrop-filter:blur(20px);
+  transition:0.4s;
   padding:20px;
 }
-button{
-  padding:8px;
-  margin:5px 0;
+.control.active{
+  top:0;
+}
+.toggle{
+  padding:10px;
+  background:#333;
+  border-radius:15px;
+  margin:10px 0;
+  cursor:pointer;
 }
 .dark{
-  background:#eee;
-  color:#000;
+  background:#f2f2f2 !important;
+  color:black !important;
 }
 </style>
 </head>
-
 <body>
 
 <div class="phone" id="phone">
 
 <div class="status">
 <span id="time"></span>
-<span id="battery">🔋78%</span>
+<span id="battery">🔋82%</span>
 </div>
 
-<div class="lock" id="lockScreen">
-Swipe / Tap to Unlock
+<div class="lock" id="lock">
+<h1 id="clock"></h1>
+<div class="unlock-text">Swipe Up to Unlock</div>
 </div>
 
-<div class="home" id="homeScreen">
-<h3>Home</h3>
-<div class="apps">
-<div class="app" onclick="openSettings()">
-<div class="icon"></div>
-Settings
-</div>
-<div class="app">
-<div class="icon"></div>
-Phone
-</div>
-<div class="app">
-<div class="icon"></div>
-Gallery
-</div>
+<div class="home" id="home">
+<div class="grid">
+<div class="app"><div class="icon"></div>Phone</div>
+<div class="app"><div class="icon"></div>Gallery</div>
+<div class="app"><div class="icon"></div>Messages</div>
+<div class="app"><div class="icon"></div>Settings</div>
 </div>
 </div>
 
-<div class="settings" id="settingsScreen">
-<h3>Settings</h3>
-<button onclick="toggleDark()">Toggle Dark Mode</button><br>
-<button onclick="changeBattery()">Change Battery</button><br>
-<button onclick="goHome()">Back</button>
+<div class="control" id="control">
+<h3>Control Center</h3>
+<div class="toggle" onclick="toggleDark()">Dark Mode</div>
+<div class="toggle" onclick="changeBattery()">Random Battery</div>
 </div>
 
 </div>
 
 <script>
-const lock = document.getElementById("lockScreen");
-const home = document.getElementById("homeScreen");
-const settings = document.getElementById("settingsScreen");
+let startY = 0;
+const lock = document.getElementById("lock");
+const home = document.getElementById("home");
+const control = document.getElementById("control");
 const phone = document.getElementById("phone");
 const battery = document.getElementById("battery");
 
-lock.onclick = function(){
-  lock.style.display="none";
-  home.style.display="block";
-}
+document.addEventListener("touchstart",e=>{
+  startY = e.touches[0].clientY;
+});
 
-function openSettings(){
-  home.style.display="none";
-  settings.style.display="block";
-}
+document.addEventListener("touchend",e=>{
+  let endY = e.changedTouches[0].clientY;
+  if(startY - endY > 80){
+    lock.style.display="none";
+    home.style.display="block";
+  }
+  if(endY - startY > 80){
+    control.classList.add("active");
+  }
+});
 
-function goHome(){
-  settings.style.display="none";
-  home.style.display="block";
-}
+document.addEventListener("click",()=>{
+  control.classList.remove("active");
+});
 
 function toggleDark(){
   phone.classList.toggle("dark");
 }
 
 function changeBattery(){
-  let random = Math.floor(Math.random()*100);
-  battery.innerText="🔋"+random+"%";
+  let r = Math.floor(Math.random()*100);
+  battery.innerText="🔋"+r+"%";
 }
 
 function updateTime(){
   let now = new Date();
-  document.getElementById("time").innerText =
-    now.getHours()+":"+String(now.getMinutes()).padStart(2,'0');
+  let h = now.getHours();
+  let m = String(now.getMinutes()).padStart(2,'0');
+  document.getElementById("time").innerText = h+":"+m;
+  document.getElementById("clock").innerText = h+":"+m;
 }
 setInterval(updateTime,1000);
 updateTime();
