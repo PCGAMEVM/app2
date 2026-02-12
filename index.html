@@ -2,11 +2,11 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>HyperOS 3.0 Simulator</title>
+<title>HyperOS 3 Gesture</title>
 <style>
 body{
   margin:0;
-  background:#0f0f0f;
+  background:#111;
   font-family:system-ui;
   display:flex;
   justify-content:center;
@@ -16,46 +16,23 @@ body{
 .phone{
   width:320px;
   height:640px;
-  background:linear-gradient(180deg,#1e1e1e,#000);
   border-radius:35px;
   overflow:hidden;
+  background:linear-gradient(180deg,#1c1c1c,#000);
   position:relative;
   color:white;
   box-shadow:0 0 40px #000;
-  transition:0.3s;
 }
 .status{
-  display:flex;
-  justify-content:space-between;
   padding:8px 15px;
   font-size:14px;
-}
-.lock{
-  position:absolute;
-  width:100%;
-  height:100%;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  background:linear-gradient(180deg,#101010,#000);
-  transition:0.4s;
-}
-.lock h1{
-  font-size:40px;
-  margin:0;
-}
-.unlock-text{
-  margin-top:10px;
-  font-size:14px;
-  opacity:0.6;
 }
 .home{
   position:absolute;
   width:100%;
   height:100%;
   padding:20px;
-  display:none;
+  transition:0.35s cubic-bezier(.2,.8,.2,1);
 }
 .grid{
   display:grid;
@@ -80,108 +57,99 @@ body{
 .icon:active{
   transform:scale(0.9);
 }
-.control{
+.app-screen{
   position:absolute;
-  top:-100%;
   width:100%;
-  height:50%;
-  background:rgba(20,20,20,0.95);
-  backdrop-filter:blur(20px);
-  transition:0.4s;
-  padding:20px;
-}
-.control.active{
+  height:100%;
+  background:#1a1a1a;
   top:0;
+  left:0;
+  transform:scale(0.8);
+  opacity:0;
+  transition:0.35s cubic-bezier(.2,.8,.2,1);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-size:22px;
 }
-.toggle{
-  padding:10px;
-  background:#333;
-  border-radius:15px;
-  margin:10px 0;
-  cursor:pointer;
+.app-screen.active{
+  transform:scale(1);
+  opacity:1;
 }
-.dark{
-  background:#f2f2f2 !important;
-  color:black !important;
+.home.hidden{
+  transform:scale(0.9);
+  opacity:0;
+}
+.gesture-bar{
+  position:absolute;
+  bottom:10px;
+  left:50%;
+  transform:translateX(-50%);
+  width:120px;
+  height:5px;
+  background:#aaa;
+  border-radius:10px;
+  opacity:0.7;
 }
 </style>
 </head>
 <body>
 
-<div class="phone" id="phone">
+<div class="phone">
 
-<div class="status">
-<span id="time"></span>
-<span id="battery">🔋82%</span>
-</div>
-
-<div class="lock" id="lock">
-<h1 id="clock"></h1>
-<div class="unlock-text">Swipe Up to Unlock</div>
-</div>
+<div class="status">HyperOS 3</div>
 
 <div class="home" id="home">
-<div class="grid">
-<div class="app"><div class="icon"></div>Phone</div>
-<div class="app"><div class="icon"></div>Gallery</div>
-<div class="app"><div class="icon"></div>Messages</div>
-<div class="app"><div class="icon"></div>Settings</div>
-</div>
+  <div class="grid">
+    <div class="app" onclick="openApp('Phone')">
+      <div class="icon"></div>Phone
+    </div>
+    <div class="app" onclick="openApp('Gallery')">
+      <div class="icon"></div>Gallery
+    </div>
+    <div class="app" onclick="openApp('Messages')">
+      <div class="icon"></div>Messages
+    </div>
+    <div class="app" onclick="openApp('Settings')">
+      <div class="icon"></div>Settings
+    </div>
+  </div>
 </div>
 
-<div class="control" id="control">
-<h3>Control Center</h3>
-<div class="toggle" onclick="toggleDark()">Dark Mode</div>
-<div class="toggle" onclick="changeBattery()">Random Battery</div>
-</div>
+<div class="app-screen" id="appScreen"></div>
+
+<div class="gesture-bar" id="gesture"></div>
 
 </div>
 
 <script>
-let startY = 0;
-const lock = document.getElementById("lock");
 const home = document.getElementById("home");
-const control = document.getElementById("control");
-const phone = document.getElementById("phone");
-const battery = document.getElementById("battery");
+const appScreen = document.getElementById("appScreen");
+const gesture = document.getElementById("gesture");
 
-document.addEventListener("touchstart",e=>{
+function openApp(name){
+  home.classList.add("hidden");
+  appScreen.classList.add("active");
+  appScreen.innerHTML = name + " App";
+}
+
+let startY=0;
+
+gesture.addEventListener("touchstart",e=>{
   startY = e.touches[0].clientY;
 });
 
-document.addEventListener("touchend",e=>{
+gesture.addEventListener("touchend",e=>{
   let endY = e.changedTouches[0].clientY;
-  if(startY - endY > 80){
-    lock.style.display="none";
-    home.style.display="block";
-  }
-  if(endY - startY > 80){
-    control.classList.add("active");
+  if(startY - endY > 50){
+    closeApp();
   }
 });
 
-document.addEventListener("click",()=>{
-  control.classList.remove("active");
-});
-
-function toggleDark(){
-  phone.classList.toggle("dark");
+function closeApp(){
+  appScreen.classList.remove("active");
+  home.classList.remove("hidden");
 }
-
-function changeBattery(){
-  let r = Math.floor(Math.random()*100);
-  battery.innerText="🔋"+r+"%";
-}
-
-function updateTime(){
-  let now = new Date();
-  let h = now.getHours();
-  let m = String(now.getMinutes()).padStart(2,'0');
-  document.getElementById("time").innerText = h+":"+m;
-  document.getElementById("clock").innerText = h+":"+m;
-}
-setInterval(updateTime,1000);
-updateTime();
 </script>
 
 </body>
